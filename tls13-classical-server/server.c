@@ -37,7 +37,7 @@ int main(void)
 #ifdef _WIN32
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		fprint(stderr, "WSASartup failed\n");
+		fprintf(stderr, "WSASartup failed\n");
 		return EXIT_FAILURE;
 	}
 #endif

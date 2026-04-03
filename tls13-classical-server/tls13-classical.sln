@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.37111.16 d17.14
+VisualStudioVersion = 17.14.37111.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls13-classical", "tls13-classical.vcxproj", "{C18495D2-06F1-473C-B59C-A1467C88E2BC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls13-classical-server", "tls13-classical.vcxproj", "{C18495D2-06F1-473C-B59C-A1467C88E2BC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tls13-classical-client", "..\tls13-classical-client\tls13-classical-client.vcxproj", "{92D43DA4-4838-4414-B0CE-EE386E541035}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{C18495D2-06F1-473C-B59C-A1467C88E2BC}.Release|x64.Build.0 = Release|x64
 		{C18495D2-06F1-473C-B59C-A1467C88E2BC}.Release|x86.ActiveCfg = Release|Win32
 		{C18495D2-06F1-473C-B59C-A1467C88E2BC}.Release|x86.Build.0 = Release|Win32
+		{92D43DA4-4838-4414-B0CE-EE386E541035}.Debug|x64.ActiveCfg = Debug|x64
+		{92D43DA4-4838-4414-B0CE-EE386E541035}.Debug|x64.Build.0 = Debug|x64
+		{92D43DA4-4838-4414-B0CE-EE386E541035}.Debug|x86.ActiveCfg = Debug|Win32
+		{92D43DA4-4838-4414-B0CE-EE386E541035}.Debug|x86.Build.0 = Debug|Win32
+		{92D43DA4-4838-4414-B0CE-EE386E541035}.Release|x64.ActiveCfg = Release|x64
+		{92D43DA4-4838-4414-B0CE-EE386E541035}.Release|x64.Build.0 = Release|x64
+		{92D43DA4-4838-4414-B0CE-EE386E541035}.Release|x86.ActiveCfg = Release|Win32
+		{92D43DA4-4838-4414-B0CE-EE386E541035}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
