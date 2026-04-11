@@ -1,34 +1,29 @@
-# CMakeLists.txt
 cmake_minimum_required(VERSION 3.16)
 project(tls13-hybrid C)
 
-# Set WOLFSSL_ROOT to your wolfSSL source directory.
-# Override on the command line: cmake -DWOLFSSL_ROOT=C:/path/to/wolfssl ..
-if(NOT DEFINED WOLFSSL_ROOT)
-    message(FATAL_ERROR
-        "WOLFSSL_ROOT is not set. Pass it with -DWOLFSSL_ROOT=<path> "
-        "pointing to your wolfSSL source directory.")
-endif()
+# Force CMake to look for static libraries (.a) only for the next search
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
-# Detect library path based on build type
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(WOLFSSL_ARCH "x64")
-else()
-    set(WOLFSSL_ARCH "x86")
-endif()
+# Locate the wolfSSL headers
+find_path(WOLFSSL_INCLUDE_DIR 
+    NAMES wolfssl/options.h wolfssl/ssl.h
+    HINTS ${WOLFSSL_ROOT}/include
+    REQUIRED
+)
 
-set(WOLFSSL_LIB_DIR "${WOLFSSL_ROOT}/Debug/${WOLFSSL_ARCH}"
-    CACHE PATH "Path to wolfssl.lib")
+# Locate the static library specifically
+find_library(WOLFSSL_LIBRARY 
+    NAMES wolfssl
+    HINTS ${WOLFSSL_ROOT}/lib ${WOLFSSL_ROOT}/lib64
+    REQUIRED
+)
 
-# Shared settings
-include_directories(${WOLFSSL_ROOT} ${WOLFSSL_ROOT}/wolfssl)
-link_directories(${WOLFSSL_LIB_DIR})
-add_definitions(-DWOLFSSL_USER_SETTINGS)
-
-# Server
+# --- Build Server ---
 add_executable(server server.c)
-target_link_libraries(server wolfssl ws2_32 advapi32)
+target_include_directories(server PRIVATE ${WOLFSSL_INCLUDE_DIR})
+target_link_libraries(server PRIVATE ${WOLFSSL_LIBRARY} pthread m)
 
-# Client
+# --- Build Client ---
 add_executable(client client.c)
-target_link_libraries(client wolfssl ws2_32 advapi32)
+target_include_directories(client PRIVATE ${WOLFSSL_INCLUDE_DIR})
+target_link_libraries(client PRIVATE ${WOLFSSL_LIBRARY} pthread m)

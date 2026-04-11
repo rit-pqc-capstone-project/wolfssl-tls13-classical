@@ -1,4 +1,0 @@
-C:/Users/albie/source/repos/wolfssl-tls13-classical/build/CMakeFiles/server.dir
-C:/Users/albie/source/repos/wolfssl-tls13-classical/build/CMakeFiles/client.dir
-C:/Users/albie/source/repos/wolfssl-tls13-classical/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/albie/source/repos/wolfssl-tls13-classical/build/CMakeFiles/ZERO_CHECK.dir

@@ -1,3 +1,4 @@
+#include <wolfssl/options.h>
 #include <wolfssl/wolfcrypt/settings.h>
 #include <wolfssl/ssl.h>
 
@@ -5,25 +6,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-	#include <winsock2.h>
-	#include <ws2tcpip.h>
-	#pragma comment(lib, "ws2_32.lib")
-	typedef SOCKET socket_t;
-	#define CLOSE_SOCKET closesocket
-#else
-	#include <unistd.h>
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	typedef int socket_t;
-	#define CLOSE_SOCKET close
-	#define INVALID_SOCKET -1
-#endif
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+typedef int socket_t;
+#define CLOSE_SOCKET close
+#define INVALID_SOCKET -1
 
 #include "common.h"
 
-int main(void)
-{
+int main(void) {
 	WOLFSSL_CTX* ctx = NULL;
 	WOLFSSL* ssl = NULL;
 	socket_t listenfd = INVALID_SOCKET;
@@ -32,15 +24,6 @@ int main(void)
 	char buff[MSG_SIZE];
 	const char* reply = "Hello from tLS 1.3 server";
 	int ret;
-
-
-#ifdef _WIN32
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-		fprintf(stderr, "WSASartup failed\n");
-		return EXIT_FAILURE;
-	}
-#endif
 
 	/*Intialize WolfSSL*/
 	wolfSSL_Init();
@@ -75,6 +58,8 @@ int main(void)
 	servAddr.sin_port = htons(DEFAULT_PORT);
 	servAddr.sin_addr.s_addr = INADDR_ANY;
 
+	printf("Setting up TCP listening socket...\n");
+
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenfd == INVALID_SOCKET) {
 		fprintf(stderr, "socket() failed\n");
@@ -96,54 +81,56 @@ int main(void)
 
 	printf("Server listening on port %d...\n", DEFAULT_PORT);
 
-	/*Accept client connection*/
-	connfd = accept(listenfd, NULL, NULL);
-	if (connfd == INVALID_SOCKET) {
-		fprintf(stderr, "accept() failed\n");
-		ret = EXIT_FAILURE;
-		goto cleanup;
+	for (;;) {
+
+		/*Accept client connection*/
+		connfd = accept(listenfd, NULL, NULL);
+		if (connfd == INVALID_SOCKET) {
+			fprintf(stderr, "accept() failed\n");
+			ret = EXIT_FAILURE;
+			goto cleanup;
+		}
+
+		printf("TCP connection accepted, starting handshake...\n");
+
+		ssl = wolfSSL_new(ctx);
+		if (ssl == NULL) {
+			fprintf(stderr, "wolfSSL_new failed\n");
+			ret = EXIT_FAILURE;
+			goto cleanup;
+		}
+
+		/*Associate connected socket with SSL object*/
+		wolfSSL_set_fd(ssl, (int)connfd);
+
+		/*Perform handshake*/
+		ret = wolfSSL_accept(ssl);
+		if (ret != SSL_SUCCESS) {
+			fprintf(stderr, "TLS handshake failed, error: %d\n",
+				wolfSSL_get_error(ssl, ret));
+			ret = EXIT_FAILURE;
+			goto cleanup;
+		}
+
+		printf("TLS 1.3 handshake successful!\n");
+		printf("Cipher suite: %s\n", wolfSSL_get_cipher(ssl));
+
+		/*Exchange Messages*/
+		memset(buff, 0, sizeof(buff));
+		ret = wolfSSL_read(ssl, buff, sizeof(buff) - 1);
+		if (ret > 0) {
+			printf("Client says: %s\n", buff);
+		}
+		else {
+			fprintf(stderr, "wolfSSL_read failed, error: %d\n",
+				wolfSSL_get_error(ssl, ret));
+		}
+
+		/* Send reply*/
+		wolfSSL_write(ssl, reply, (int)strlen(reply));
+		printf("Reply sent.\n");
+
 	}
-
-	printf("TCP connection accepted, starting handshake...\n");
-
-	ssl = wolfSSL_new(ctx);
-	if (ssl == NULL) {
-		fprintf(stderr, "wolfSSL_new failed\n");
-		ret = EXIT_FAILURE;
-		goto cleanup;
-	}
-
-	/*Associate connected socket with SSL object*/
-	wolfSSL_set_fd(ssl, (int)connfd);
-
-	/*Perform handshake*/
-	ret = wolfSSL_accept(ssl);
-	if (ret != SSL_SUCCESS) {
-		fprintf(stderr, "TLS handshake failed, error: %d\n",
-			wolfSSL_get_error(ssl, ret));
-		ret = EXIT_FAILURE;
-		goto cleanup;
-	}
-
-	printf("TLS 1.3 handshake successful!\n");
-	printf("Cipher suite: %s\n", wolfSSL_get_cipher(ssl));
-
-	/*Exchange Messages*/
-	memset(buff, 0, sizeof(buff));
-	ret = wolfSSL_read(ssl, buff, sizeof(buff) - 1);
-	if (ret > 0) {
-		printf("Client says: %s\n", buff);
-	}
-	else {
-		fprintf(stderr, "wolfSSL_read failed, error: %d\n",
-			wolfSSL_get_error(ssl, ret));
-	}
-
-	/* Send reply*/
-	wolfSSL_write(ssl, reply, (int)strlen(reply));
-	printf("Reply sent.\n");
-
-	ret = 0;
 
 cleanup:
 	if (ssl)                        wolfSSL_free(ssl);
@@ -152,9 +139,5 @@ cleanup:
 	if (listenfd != INVALID_SOCKET) CLOSE_SOCKET(listenfd);
 	wolfSSL_Cleanup();
 
-#ifdef _WIN32
-	WSACleanup();
-#endif
-
-	return ret;
+	return 0;
 }
