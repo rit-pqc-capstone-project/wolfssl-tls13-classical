@@ -9,11 +9,12 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+#include "common.h"
+
 typedef int socket_t;
 #define CLOSE_SOCKET close
 #define INVALID_SOCKET -1
-
-#include "common.h"
 
 int main(void) {
 	WOLFSSL_CTX* ctx = NULL;
@@ -22,7 +23,7 @@ int main(void) {
 	socket_t connfd = INVALID_SOCKET;
 	struct sockaddr_in servAddr;
 	char buff[MSG_SIZE];
-	const char* reply = "Hello from tLS 1.3 server";
+	const char* reply = "Hello from TLS 1.3 server";
 	int ret;
 
 	/*Intialize WolfSSL*/
