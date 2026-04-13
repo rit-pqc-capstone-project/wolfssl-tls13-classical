@@ -21,32 +21,37 @@ typedef int socket_t;
 #define INVALID_SOCKET -1
 
 // this is just a simple selection sort implementation so that the array of times can be sorted to find the median time
-void selectionSort(double arr[], int n) {
-   for (int i = 0; i < n - 1; i++) {
-       int min = i;
-       for (int j = i + 1; j < n; j++) {
-           if (arr[j] < arr[min])
-               min = j;
-       }
-       if (min != i) {
-           double temp = arr[min];
-           arr[min] = arr[i];
-           arr[i] = temp;
-       }
-   }
+void selectionSort(double arr[], int n)
+{
+	for (int i = 0; i < n - 1; i++)
+	{
+		int min = i;
+		for (int j = i + 1; j < n; j++)
+		{
+			if (arr[j] < arr[min])
+				min = j;
+		}
+		if (min != i)
+		{
+			double temp = arr[min];
+			arr[min] = arr[i];
+			arr[i] = temp;
+		}
+	}
 }
 
-int main(void) {
+int main(void)
+{
 	struct timespec start, end;
 	double connect_time[NUMBER_OF_RUNS], handshake_time[NUMBER_OF_RUNS], data_send_time[NUMBER_OF_RUNS], data_recv_time[NUMBER_OF_RUNS], total_time[NUMBER_OF_RUNS];
 	double total_connect_time = 0.0, total_handshake_time = 0.0, total_data_send_time = 0.0, total_data_recv_time = 0.0, total_total_time = 0.0;
 
-	WOLFSSL_CTX* ctx = NULL;
-	WOLFSSL* ssl = NULL;
+	WOLFSSL_CTX *ctx = NULL;
+	WOLFSSL *ssl = NULL;
 	socket_t sockfd = INVALID_SOCKET;
 	struct sockaddr_in servAddr;
 	char buff[MSG_SIZE];
-	const char* msg = "Hello from TLS 1.3 client!";
+	const char *msg = "Hello from TLS 1.3 client!";
 	int ret;
 
 	/*Initialize wolfSSL*/
@@ -54,21 +59,23 @@ int main(void) {
 
 	/*Create context - TLS 1.3 client only*/
 	ctx = wolfSSL_CTX_new(wolfTLSv1_3_client_method());
-	if (ctx == NULL) {
+	if (ctx == NULL)
+	{
 		fprintf(stderr, "wolfSSL_CTX_new failed\n");
 		ret = EXIT_FAILURE;
 		goto cleanup;
 	}
 
 	/*Load CA cert to verify server*/
-	if (wolfSSL_CTX_load_verify_locations(ctx, CA_CERT_FILE, NULL)
-		!= SSL_SUCCESS) {
+	if (wolfSSL_CTX_load_verify_locations(ctx, CA_CERT_FILE, NULL) != SSL_SUCCESS)
+	{
 		fprintf(stderr, "Failed to load CA cert: %s\n", CA_CERT_FILE);
 		ret = EXIT_FAILURE;
 		goto cleanup;
 	}
 
-	for (int i = 0; i < NUMBER_OF_RUNS; i++) {
+	for (int i = 0; i < NUMBER_OF_RUNS; i++)
+	{
 
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		/*Connect to server via TCP*/
@@ -82,24 +89,28 @@ int main(void) {
 		total_connect_time += connect_time[i];
 
 		sockfd = socket(AF_INET, SOCK_STREAM, 0);
-		if (sockfd == INVALID_SOCKET) {
+		if (sockfd == INVALID_SOCKET)
+		{
 			fprintf(stderr, "socket() failed\n");
 			ret = EXIT_FAILURE;
 			goto cleanup;
 		}
 
-		if (connect(sockfd, (struct sockaddr*)&servAddr, sizeof(servAddr)) != 0) {
+		if (connect(sockfd, (struct sockaddr *)&servAddr, sizeof(servAddr)) != 0)
+		{
 			fprintf(stderr, "TCP connect() failed\n");
 			ret = EXIT_FAILURE;
 			goto cleanup;
 		}
 
-		if (i == 0) printf("TCP connected, starting TLS handshake...\n");
+		if (i == 0)
+			printf("TCP connected, starting TLS handshake...\n");
 
 		/*TLS handshake*/
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		ssl = wolfSSL_new(ctx);
-		if (ssl == NULL) {
+		if (ssl == NULL)
+		{
 			fprintf(stderr, "wolfSSL_new failed\n");
 			ret = EXIT_FAILURE;
 			goto cleanup;
@@ -108,9 +119,10 @@ int main(void) {
 		wolfSSL_set_fd(ssl, (int)sockfd);
 
 		ret = wolfSSL_connect(ssl);
-		if (ret != SSL_SUCCESS) {
+		if (ret != SSL_SUCCESS)
+		{
 			fprintf(stderr, "TLS handshake failed, error: %d\n",
-				wolfSSL_get_error(ssl, ret));
+					wolfSSL_get_error(ssl, ret));
 			ret = EXIT_FAILURE;
 			goto cleanup;
 		}
@@ -120,8 +132,9 @@ int main(void) {
 		total_handshake_time += handshake_time[i];
 		// only print the handshake details for the first run to avoid cluttering the output
 
-		const char* tls_version = wolfSSL_get_version(ssl);
-		if (i == 0) { 
+		const char *tls_version = wolfSSL_get_version(ssl);
+		if (i == 0)
+		{
 			printf("TLS 1.3 handshake successful\n");
 			printf("Cipher suite: %s\n", tls_version);
 		}
@@ -133,7 +146,8 @@ int main(void) {
 		data_send_time[i] = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1e-9;
 		total_data_send_time += data_send_time[i];
 
-		if (i == 0) printf("Message sent: %s\n", msg);
+		if (i == 0)
+			printf("Message sent: %s\n", msg);
 
 		/*Read reply from server*/
 		memset(buff, 0, sizeof(buff));
@@ -142,18 +156,22 @@ int main(void) {
 		clock_gettime(CLOCK_MONOTONIC, &end);
 		data_recv_time[i] = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1e-9;
 		total_data_recv_time += data_recv_time[i];
-		if (ret > 0) {
-			if (i == 0) {
+		if (ret > 0)
+		{
+			if (i == 0)
+			{
 				printf("Server says: %s\n", buff);
 			}
 		}
-		else {
+		else
+		{
 			fprintf(stderr, "wolfSSL_read failed, error: %d\n",
-				wolfSSL_get_error(ssl, ret));
+					wolfSSL_get_error(ssl, ret));
 		}
 	}
 
-	for (int i = 0; i < NUMBER_OF_RUNS; i++) {
+	for (int i = 0; i < NUMBER_OF_RUNS; i++)
+	{
 		total_time[i] = connect_time[i] + handshake_time[i] + data_send_time[i] + data_recv_time[i];
 		total_total_time += total_time[i];
 	}
@@ -166,21 +184,24 @@ int main(void) {
 
 	printf("\n--- Performance Metrics ---\n");
 	printf("TCP Connect Time (Average)  : %.10f seconds\n", total_connect_time / NUMBER_OF_RUNS);
-	printf("TCP Connect Time (Median)   : %.10f seconds\n", connect_time[NUMBER_OF_RUNS / 2] + connect_time[(NUMBER_OF_RUNS / 2) - 1] / 2.0);
+	printf("TCP Connect Time (Median)   : %.10f seconds\n", (connect_time[NUMBER_OF_RUNS / 2] + connect_time[(NUMBER_OF_RUNS / 2) - 1]) / 2.0);
 	printf("TLS Handshake Time (Average): %.10f seconds\n", total_handshake_time / NUMBER_OF_RUNS);
-	printf("TLS Handshake Time (Median) : %.10f seconds\n", handshake_time[NUMBER_OF_RUNS / 2] + handshake_time[(NUMBER_OF_RUNS / 2) - 1] / 2.0);
+	printf("TLS Handshake Time (Median) : %.10f seconds\n", (handshake_time[NUMBER_OF_RUNS / 2] + handshake_time[(NUMBER_OF_RUNS / 2) - 1]) / 2.0);
 	printf("Data Send Time (Average)    : %.10f seconds\n", total_data_send_time / NUMBER_OF_RUNS);
-	printf("Data Send Time (Median)     : %.10f seconds\n", data_send_time[NUMBER_OF_RUNS / 2] + data_send_time[(NUMBER_OF_RUNS / 2) - 1] / 2.0);
+	printf("Data Send Time (Median)     : %.10f seconds\n", (data_send_time[NUMBER_OF_RUNS / 2] + data_send_time[(NUMBER_OF_RUNS / 2) - 1]) / 2.0);
 	printf("Data Receive Time (Average) : %.10f seconds\n", total_data_recv_time / NUMBER_OF_RUNS);
-	printf("Data Receive Time (Median)  : %.10f seconds\n", data_recv_time[NUMBER_OF_RUNS / 2] + data_recv_time[(NUMBER_OF_RUNS / 2) - 1] / 2.0);
+	printf("Data Receive Time (Median)  : %.10f seconds\n", (data_recv_time[NUMBER_OF_RUNS / 2] + data_recv_time[(NUMBER_OF_RUNS / 2) - 1]) / 2.0);
 	printf("Total Time (Average)        : %.10f seconds\n", total_total_time / NUMBER_OF_RUNS);
-	printf("Total Time (Median)         : %.10f seconds\n", total_time[NUMBER_OF_RUNS / 2] + total_time[(NUMBER_OF_RUNS / 2) - 1] / 2.0);
+	printf("Total Time (Median)         : %.10f seconds\n", (total_time[NUMBER_OF_RUNS / 2] + total_time[(NUMBER_OF_RUNS / 2) - 1]) / 2.0);
 	printf("---------------------------\n");
 
 cleanup:
-	if (ssl)                      wolfSSL_free(ssl);
-	if (ctx)                      wolfSSL_CTX_free(ctx);
-	if (sockfd != INVALID_SOCKET) CLOSE_SOCKET(sockfd);
+	if (ssl)
+		wolfSSL_free(ssl);
+	if (ctx)
+		wolfSSL_CTX_free(ctx);
+	if (sockfd != INVALID_SOCKET)
+		CLOSE_SOCKET(sockfd);
 	wolfSSL_Cleanup();
 
 	return 0;
