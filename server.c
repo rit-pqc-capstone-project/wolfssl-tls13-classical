@@ -38,7 +38,7 @@ int main(void) {
 	}
 
 	int err_code = wolfSSL_CTX_use_certificate_file(ctx, CERT_FILE, SSL_FILETYPE_PEM);
-	print("wolfSSL_CTX_use_certificate_file returned %d\n", err_code);
+	printf("wolfSSL_CTX_use_certificate_file returned %d\n", err_code);
 	/*Load server certs*/
 	if (err_code != SSL_SUCCESS) {
 		fprintf(stderr, "Failed to load cert: %s\n", CERT_FILE);
