@@ -42,7 +42,7 @@ openssl x509 -req -in server.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateseri
 ```bash
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DWOLFSSL_ROOT=/usr/local/include/wolfssl
+cmake .. -DCMAKE_BUILD_TYPE=Release -DWOLFSSL_DILITHIUM=ON -DWOLFSSL_ROOT=/usr/local/include/wolfssl
 cmake --build . --config Release
 
 # Run server (background)
