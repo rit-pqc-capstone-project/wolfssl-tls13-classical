@@ -26,7 +26,7 @@ int main(void) {
 	const char* reply = "Hello from TLS 1.3 server";
 	int ret;
 
-	/*Intialize WolfSSL*/
+	/*Initialize WolfSSL*/
 	wolfSSL_Init();
 
 	/*Create context*/
@@ -49,6 +49,16 @@ int main(void) {
 	if (wolfSSL_CTX_use_PrivateKey_file(ctx, KEY_FILE, SSL_FILETYPE_PEM)
 		!= SSL_SUCCESS) {
 		fprintf(stderr, "Failed to load key: %s\n", KEY_FILE);
+		ret = EXIT_FAILURE;
+		goto cleanup;
+	}
+
+	/* Explicitly set the key exchange group to a classical curve (SECP256R1) */
+	/* This ensures that hybrid key exchanges are not used */
+	int groups[] = { WOLFSSL_ECC_SECP256R1 };
+	if (wolfSSL_CTX_set_groups(ctx, groups, 1) != SSL_SUCCESS) {
+		fprintf(stderr, "Failed to set classical KEM group, error: %d\n",
+				wolfSSL_get_error(NULL, 0));
 		ret = EXIT_FAILURE;
 		goto cleanup;
 	}
@@ -136,7 +146,7 @@ int main(void) {
 cleanup:
 	if (ssl)                        wolfSSL_free(ssl);
 	if (ctx)                        wolfSSL_CTX_free(ctx);
-	if (connfd != INVALID_SOCKET) CLOSE_SOCKET(connfd);
+	if (connfd != INVALID_SOCKET)   CLOSE_SOCKET(connfd);
 	if (listenfd != INVALID_SOCKET) CLOSE_SOCKET(listenfd);
 	wolfSSL_Cleanup();
 
