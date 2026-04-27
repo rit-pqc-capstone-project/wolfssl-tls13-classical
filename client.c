@@ -66,6 +66,16 @@ int main(void)
 		goto cleanup;
 	}
 
+	/* Explicitly set the key exchange group to a classical curve (SECP256R1) */
+	int groups[] = { WOLFSSL_ECC_SECP256R1 };
+	if (wolfSSL_CTX_set_groups(ctx, groups, 1) != SSL_SUCCESS)
+	{
+		fprintf(stderr, "Failed to set classical KEM group, error: %d\n",
+				wolfSSL_get_error(NULL, 0));
+		ret = EXIT_FAILURE;
+		goto cleanup;
+	}
+
 	/*Load CA cert to verify server*/
 	if (wolfSSL_CTX_load_verify_locations(ctx, CA_CERT_FILE, NULL) != SSL_SUCCESS)
 	{
@@ -167,6 +177,15 @@ int main(void)
 		{
 			fprintf(stderr, "wolfSSL_read failed, error: %d\n",
 					wolfSSL_get_error(ssl, ret));
+		}
+
+		if (ssl) {
+			wolfSSL_free(ssl);
+			ssl = NULL;
+		}
+		if (sockfd != INVALID_SOCKET) {
+			CLOSE_SOCKET(sockfd);
+			sockfd = INVALID_SOCKET;
 		}
 	}
 
